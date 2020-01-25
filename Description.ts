@@ -1,4 +1,3 @@
-import { openSync } from "fs";
 import vm from "vm";
 
 export enum MoveDirections {
@@ -464,8 +463,7 @@ export class Description {
 
     public generate_js_code_normalize(): string {
         let ret = `function normalize(state) {\n`
-        ret += `    return [state,`
-        ret += this.transformations.map((trans) => {
+        const states = this.transformations.map((trans) => {
             let ops: string[] = []
             for (let [shift, pos] of trans) {
                 if (shift == 0) {
@@ -475,9 +473,13 @@ export class Description {
                 }
             }
             return ops.join(" | ")
-        }).join(",\n")
-        ret += "].reduce((accumulator, value) => accumulator < value ? accumulator : value)\n"
-        ret += "}\nnormalize"
+        })
+
+        for(const s of states) {
+            ret += `{const c = ${s}; if (c < state) state = c}\n`
+        }
+        ret += "return state}\n"
+        ret += "normalize"
         return ret
     }
 

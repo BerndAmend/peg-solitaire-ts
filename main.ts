@@ -34,5 +34,7 @@ const [desc, startAsString] = ((): [peg.Description, string] => {
     }
 })()
 
+console.log(desc.generate_js_code_normalize())
+
 const start = desc.from_string(startAsString)
 desc.solve(start)
