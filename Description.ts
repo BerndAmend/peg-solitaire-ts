@@ -11,7 +11,7 @@ export type State = bigint;
 export type Lut = number[][];
 export type Transformation = Map<number, State>
 
-export const EMPTY_STATE: bigint = 0n;
+export const EMPTY_STATE: State = 0n;
 
 export class BoardSet {
     /// In the interest of memory-savings, we start with the smallest feasible
@@ -19,53 +19,53 @@ export class BoardSet {
     /// started with a size of 2, we'd have to expand as soon as the second item
     /// was added.
     readonly INITIAL_SIZE: number = 1 << 5
-    
-    private _length: number
-    private _data: BigUint64Array
-    
+
+    #length: number
+    #data: BigUint64Array
+
     /// Returns the number of elements in the set.
     get length(): number {
-        return this._length
+        return this.#length
     }
-    
+
     get data(): BigUint64Array {
-        return this._data
+        return this.#data
     }
 
     constructor(expected_size: number = 0) {
         const size = this.compute_capacity_for_size(expected_size, this.INITIAL_SIZE);
-        this._data = new BigUint64Array(size)
-        this._length = 0
+        this.#data = new BigUint64Array(size)
+        this.#length = 0
     }
 
     /// Reserves capacity for at least additional more elements to be inserted in the HashSet.
     /// The collection may reserve more space to avoid frequent reallocations.
     reserve(additional: number) {
-        let expected_size = this._length + additional
-        if (this.size_fits_into_capacity(expected_size, this._data.length))
+        let expected_size = this.#length + additional
+        if (this.size_fits_into_capacity(expected_size, this.#data.length))
             return
 
         let new_obj = new BoardSet(expected_size)
-        if (this._length != 0)
-            new_obj.fast_insert_all(this._data)
+        if (this.#length !== 0)
+            new_obj.fast_insert_all(this.#data)
 
-        this._data = new_obj._data
+        this.#data = new_obj.#data
     }
 
     /// current fill state in percent
     used(): number {
-        return this._length === 0 ? 1 : (this._length / this.data.length)
+        return this.#length === 0 ? 1 : (this.#length / this.data.length)
     }
 
     /// Clears the set, removing all values and freeing the memory.
     clear() {
-        this._length = 0
-        this._data.fill(0n)
+        this.#length = 0
+        this.#data.fill(0n)
     }
 
     /// Returns true if the set contains a value.
     contains(value: State): boolean {
-        return this._data[this.find_or_empty(value)] !== EMPTY_STATE
+        return this.#data[this.find_or_empty(value)] !== EMPTY_STATE
     }
 
     /// Adds a value to the set.
@@ -77,15 +77,15 @@ export class BoardSet {
     /// Adds a value to the set without checking if it is large enough.
     fast_insert(o: State) {
         const index = this.find_or_empty(o);
-        if (this._data[index] == EMPTY_STATE) {
-            this._length++
-            this._data[index] = o
+        if (this.#data[index] === EMPTY_STATE) {
+            this.#length++
+            this.#data[index] = o
         }
     }
 
     // add the elements without checking if there is enough space
     fast_insert_all(other: BigUint64Array) {
-        for(let x of other) {
+        for (let x of other) {
             if (x !== EMPTY_STATE)
                 this.fast_insert(x)
         }
@@ -107,7 +107,7 @@ export class BoardSet {
         let h = value
         h *= 0x85ebca6bn
         h ^= h >> 13n;
-        return Number(h & (BigInt(this._data.length) - 1n))
+        return Number(h & (BigInt(this.#data.length) - 1n))
     }
 
     /// Returns the index in the table at which a particular item resides, or the
@@ -117,12 +117,12 @@ export class BoardSet {
     private find_or_empty(o: State): number {
         let index = this.get_index_from_state(o)
 
-        while(true) {
-            let existing = this._data[index];
-            if (existing == EMPTY_STATE || o == existing) {
+        while (true) {
+            let existing = this.#data[index];
+            if (existing === EMPTY_STATE || o === existing) {
                 return index
             } else {
-                index = (index + 1) & (this._data.length - 1)
+                index = (index + 1) & (this.#data.length - 1)
             }
         }
     }
@@ -162,7 +162,7 @@ export class Description {
         }
 
         {
-            if (layout.length == 0)
+            if (layout.length === 0)
                 throw new Error("layout cannot be empty")
 
             for (let x of layout) {
@@ -177,7 +177,7 @@ export class Description {
 
         this.pegs = 0;
         for (let x of layout)
-            if (x == 'o')
+            if (x === 'o')
                 this.pegs++
 
         if (this.pegs < 3)
@@ -234,9 +234,9 @@ export class Description {
                             throw new Error("a new MoveDirections was added without handling it")
                         })()
 
-                        if (valid && x1 < x_max && y1 < y_max && lut[y1][x1] != -1 &&
+                        if (valid && x1 < x_max && y1 < y_max && lut[y1][x1] !== -1 &&
                             x2 < x_max && y2 < y_max &&
-                            lut[y2][x2] != -1) {
+                            lut[y2][x2] !== -1) {
                             this.move_mask.push((1n << BigInt(lut[y][x])) | (1n << BigInt(lut[y1][x1])) |
                                 (1n << BigInt(lut[y2][x2])));
                             this.check_mask1.push((1n << BigInt(lut[y][x])) | (1n << BigInt(lut[y1][x1])))
@@ -247,7 +247,7 @@ export class Description {
             }
         }
 
-        if (this.move_mask.length == 0)
+        if (this.move_mask.length === 0)
             throw new Error("No moves are possible")
 
         // calculate transformations
@@ -275,7 +275,7 @@ export class Description {
                     return false
                 for (let y = 0; y < in1.length; ++y) {
                     for (let x = 0; x < in2[0].length; ++x) {
-                        if ((in1[y][x] == -1 || in2[y][x] == -1) && in1[y][x] != in2[y][x])
+                        if ((in1[y][x] === -1 || in2[y][x] === -1) && in1[y][x] !== in2[y][x])
                             return false
                     }
                 }
@@ -364,7 +364,7 @@ export class Description {
                 case '\n': return '\n'
                 case 'o':
                     pos -= 1
-                    return (state & (1n << BigInt(pos))) != 0n ? 'x' : '.'
+                    return (state & (1n << BigInt(pos))) !== 0n ? 'x' : '.'
             }
         }).join("")
     }
@@ -375,15 +375,15 @@ export class Description {
         let pos = 0n;
         let result: State = EMPTY_STATE;
 
-        if (state.length != this.layout.length)
+        if (state.length !== this.layout.length)
             throw new Error("state length does not match the layout length")
 
         if (!this.layout.split("").every((l, i) => {
             const s = state[i]
             switch (l) {
-                case 'o': return s == 'x' || s == '.'
-                case '.': return s == ' '
-                case '\n': return s == '\n'
+                case 'o': return s === 'x' || s === '.'
+                case '.': return s === ' '
+                case '\n': return s === '\n'
                 default: return false
             }
         }))
@@ -466,7 +466,7 @@ export class Description {
         const states = this.transformations.map((trans) => {
             let ops: string[] = []
             for (let [shift, pos] of trans) {
-                if (shift == 0) {
+                if (shift === 0) {
                     ops.push(`(state & ${pos}n)`)
                 } else {
                     ops.push(`(state & ${pos}n)${shift > 0 ? " << " : " >> "}${shift > 0 ? shift : Math.abs(shift)}n`)
@@ -475,7 +475,7 @@ export class Description {
             return ops.join(" | ")
         })
 
-        for(const s of states) {
+        for (const s of states) {
             ret += `{const c = ${s}; if (c < state) state = c}\n`
         }
         ret += "return state}\n"
@@ -495,11 +495,11 @@ export class Description {
 
         let startTime = new Date().getTime()
         const size = this.move_mask.length
-        while (current.length != 0) {
+        while (current.length !== 0) {
             console.log(`search fields with ${solution.length + 2} removed pegs`)
             let next: BoardSet = new BoardSet
             for (const field of current.data) {
-                if(field == EMPTY_STATE)
+                if (field === EMPTY_STATE)
                     continue
                 next.reserve(size)
                 for (let i = 0; i < size; ++i) {
@@ -512,7 +512,7 @@ export class Description {
             solution.push(current)
             current = next
             let endTime = new Date().getTime()
-            console.log(`, found ${current.length} fields in ${endTime-startTime}ms`)
+            console.log(`, found ${current.length} fields in ${endTime - startTime}ms`)
             startTime = endTime
         }
 
@@ -746,7 +746,7 @@ mod tests {
                 let mut sol = i.clone();
                 sol.sort();
                 sol.dedup();
-                o + sol.iter().filter(|&&x| x != EMPTY_STATE).count()
+                o + sol.iter().filter(|&&x| x !== EMPTY_STATE).count()
             });
         assert_eq!(count, 23475688);
     }
