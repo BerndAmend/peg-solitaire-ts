@@ -161,14 +161,12 @@ export class Description {
             throw new Error("no move directions were provided")
         }
 
-        {
-            if (layout.length === 0)
-                throw new Error("layout cannot be empty")
+        if (layout.length === 0)
+            throw new Error("layout cannot be empty")
 
-            for (let x of layout) {
-                if (x !== '.' && x !== 'o' && x !== '\n')
-                    throw new Error(`layout contains the invalid character '${x}' allowed is .o\\n`)
-            }
+        for (let x of layout) {
+            if (x !== '.' && x !== 'o' && x !== '\n')
+                throw new Error(`layout contains the invalid character '${x}' allowed is .o\\n`)
         }
 
         this.name = name
