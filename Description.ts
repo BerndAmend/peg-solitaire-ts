@@ -519,7 +519,7 @@ export class Description {
   }
 
   public generate_js_code_normalize(): string {
-    let ret = `function normalize(state) {\n`;
+    let ret = `function normalize(state) { let r = state;\n`;
     const states = this.transformations.map((trans) => {
       const ops: string[] = [];
       for (const [shift, pos] of trans) {
@@ -537,15 +537,15 @@ export class Description {
     });
 
     for (const s of states) {
-      ret += `{const c = ${s}; if (c < state) state = c}\n`;
+      ret += `{const c = ${s}; if (c < r) r = c}\n`;
     }
-    ret += "return state}\n";
+    ret += "return r}\n";
     ret += "normalize";
     return ret;
   }
 
   public generate_wasm_code_normalize(): string {
-    let ret = `export function normalize(state: u64): u64 {\n`;
+    let ret = `export function normalize(state: u64): u64 { let r = state;\n`;
     const states = this.transformations.map((trans) => {
       const ops: string[] = [];
       for (const [shift, pos] of trans) {
@@ -563,9 +563,9 @@ export class Description {
     });
 
     for (const s of states) {
-      ret += `{const c = ${s}; if (c < state) state = c}\n`;
+      ret += `{const c = ${s}; if (c < r) r = c}\n`;
     }
-    ret += "return state}\n";
+    ret += "return r}\n";
     return ret;
   }
 
