@@ -1,7 +1,7 @@
 import * as peg from "./Description.ts";
 
 console.log("peg-solitaire typescript edition");
-console.log("Copyright (C) 2021 Bernd Amend <pegsolitaire@berndamend.de>");
+console.log("Copyright (C) 2021-2022 Bernd Amend <pegsolitaire@berndamend.de>");
 console.log(
   "This program is free software: you can redistribute it and/or modify",
 );
@@ -11,7 +11,7 @@ console.log(
 console.log(
   "the Free Software Foundation. This program comes with ABSOLUTELY NO WARRANTY",
 );
-console.log(`usage bla [board]`);
+console.log(`usage deno run main.ts [board]`);
 console.log("  boards: english [default], euro, 15");
 
 const [desc, startAsString] = ((): [peg.Description, string] => {
@@ -19,7 +19,6 @@ const [desc, startAsString] = ((): [peg.Description, string] => {
     case "euro":
       return [
         new peg.Description(
-          "European",
           "..ooo..\n.ooooo.\nooooooo\nooooooo\nooooooo\n.ooooo.\n..ooo..",
           [peg.MoveDirections.Horizontal, peg.MoveDirections.Vertical],
         ),
@@ -27,7 +26,7 @@ const [desc, startAsString] = ((): [peg.Description, string] => {
       ];
     case "15":
       return [
-        new peg.Description("Holes15", "o....\noo...\nooo..\noooo.\nooooo", [
+        new peg.Description("o....\noo...\nooo..\noooo.\nooooo", [
           peg.MoveDirections.Horizontal,
           peg.MoveDirections.Vertical,
           peg.MoveDirections.LeftDiagonal,
@@ -39,7 +38,6 @@ const [desc, startAsString] = ((): [peg.Description, string] => {
     default:
       return [
         new peg.Description(
-          "English",
           "..ooo..\n..ooo..\nooooooo\nooooooo\nooooooo\n..ooo..\n..ooo..",
           [peg.MoveDirections.Horizontal, peg.MoveDirections.Vertical],
         ),
@@ -49,4 +47,19 @@ const [desc, startAsString] = ((): [peg.Description, string] => {
 })();
 
 const start = desc.from_string(startAsString);
-await desc.solve(start);
+
+const startTime = new Date().getTime();
+let lastTime = startTime;
+
+const solution = await desc.solve(start, (pegs: number) => {
+  lastTime = new Date().getTime();
+  console.log(`search fields with ${pegs} removed pegs`);
+}, (possible_fields: number) => {
+  const endTime = new Date().getTime();
+  console.log(
+    `, found ${possible_fields} fields in ${endTime - lastTime}ms`,
+  );
+  lastTime = endTime;
+});
+console.log(`took ${new Date().getTime() - startTime}ms`);
+

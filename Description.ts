@@ -1,4 +1,3 @@
-// deno-lint-ignore-file camelcase
 import asc from "assemblyscript/asc";
 
 export enum MoveDirections {
@@ -136,7 +135,6 @@ export class BoardSet {
 }
 
 export class Description {
-  name: string;
   layout: string;
   directions: MoveDirections[];
   pegs: number;
@@ -156,11 +154,7 @@ export class Description {
 
   transformations: Transformation[];
 
-  constructor(name: string, layout: string, directions: MoveDirections[]) {
-    if (!name) {
-      throw new Error("name cannot be empty");
-    }
-
+  constructor(layout: string, directions: MoveDirections[]) {
     if (directions.length === 0) {
       throw new Error("no move directions were provided");
     }
@@ -177,7 +171,6 @@ export class Description {
       }
     }
 
-    this.name = name;
     this.layout = layout;
     this.directions = directions;
 
@@ -392,10 +385,14 @@ export class Description {
     }
   }
 
+  public is_valid(state: State): boolean {
+    return state <= ((1n << BigInt(this.pegs)) - 1n);
+  }
+
   /// creates a human-readable version of a field, the output as described by the layout
   /// Throws an exception if the state was invalid
   public to_string(state: State): string {
-    if (this.pegs < 64 && state > ((1n << BigInt(this.pegs)) - 1n)) {
+    if (!this.is_valid(state)) {
       throw new Error("state does not describe a valid game field");
     }
 
@@ -474,7 +471,7 @@ export class Description {
   /// blocked fields get -1, empty fields get 0, used fields 1
   /// Throws an exception if the state was invalid
   public to_vec(state: State): Lut {
-    if (this.pegs < 64n && state > ((1n << BigInt(this.pegs)) - 1n)) {
+    if (!this.is_valid(state)) {
       throw new Error("invalid state");
     }
 
@@ -518,32 +515,6 @@ export class Description {
     return r;
   }
 
-  public generate_js_code_normalize(): string {
-    let ret = `function normalize(state) { let r = state;\n`;
-    const states = this.transformations.map((trans) => {
-      const ops: string[] = [];
-      for (const [shift, pos] of trans) {
-        if (shift === 0) {
-          ops.push(`(state & ${pos}n)`);
-        } else {
-          ops.push(
-            `(state & ${pos}n)${shift > 0 ? " << " : " >> "}${
-              shift > 0 ? shift : Math.abs(shift)
-            }n`,
-          );
-        }
-      }
-      return ops.join(" | ");
-    });
-
-    for (const s of states) {
-      ret += `{const c = ${s}; if (c < r) r = c}\n`;
-    }
-    ret += "return r}\n";
-    ret += "normalize";
-    return ret;
-  }
-
   public generate_wasm_code_normalize(): string {
     let ret = `export function normalize(state: u64): u64 { let r = state;\n`;
     const states = this.transformations.map((trans) => {
@@ -572,31 +543,37 @@ export class Description {
   public async generate_normalize_function(): Promise<(state: State) => State> {
     // @ts-ignore: I have no idea on how to fix this
     const result = await asc.compileString(this.generate_wasm_code_normalize());
-    //console.log(result.stderr.toString());
+    if (result.error) {
+      throw Error(`Compilation error ${result.stderr.toString()}`);
+    }
 
     const wasmModule = new WebAssembly.Module(result.binary);
     const wasmInstance = new WebAssembly.Instance(wasmModule);
     const normalize = wasmInstance.exports.normalize as (state: State) => State;
     return normalize;
-    // return eval(
-    //   this.generate_js_code_normalize(),
-    // );
   }
 
-  public async solve(start: State): Promise<BoardSet[]> {
+  public async solve(
+    start: State,
+    before?: (pegs: number) => void,
+    after?: (possible_fields: number) => void,
+  ): Promise<BoardSet[]> {
     const normalize = await this.generate_normalize_function();
 
-    //assert_eq!(start.count_ones(), this.pegs - 1);
+    if (!this.is_valid(start)) {
+      throw Error("invalid state");
+    }
 
     const solution: BoardSet[] = [];
 
     let current: BoardSet = new BoardSet();
     current.insert(normalize(start));
 
-    let startTime = new Date().getTime();
     const size = this.move_mask.length;
     while (current.length !== 0) {
-      console.log(`search fields with ${solution.length + 2} removed pegs`);
+      if (before) {
+        before(solution.length + 2);
+      }
       const next: BoardSet = new BoardSet();
       for (const field of current.data) {
         if (field === EMPTY_STATE) {
@@ -613,15 +590,10 @@ export class Description {
 
       solution.push(current);
       current = next;
-      const endTime = new Date().getTime();
-      console.log(
-        `, found ${current.length} fields in ${endTime - startTime}ms`,
-      );
-      startTime = endTime;
+      if (after) {
+        after(current.length);
+      }
     }
-
-    //     println!("number of possible fields {} in {}",
-    //              solution.iter().fold(0, |o, i| o + i.len()), t);
 
     return solution;
   }

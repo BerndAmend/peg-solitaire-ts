@@ -5,20 +5,10 @@ import {
 
 import * as peg from "./Description.ts";
 
-Deno.test("description needs to have a non empty name ", () => {
-  assertThrows(
-    () => {
-      new peg.Description("", "ooo", [peg.MoveDirections.Horizontal]);
-    },
-    Error,
-    "name cannot be empty",
-  );
-});
-
 Deno.test("description requires at least 3 pegs ", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "o", [peg.MoveDirections.Horizontal]);
+      new peg.Description("o", [peg.MoveDirections.Horizontal]);
     },
     Error,
     "peg solitaire requires at least 3 pegs",
@@ -28,7 +18,7 @@ Deno.test("description requires at least 3 pegs ", () => {
 Deno.test("description requires at least 1 move direction", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "ooo", []);
+      new peg.Description("ooo", []);
     },
     Error,
     "no move directions were provided",
@@ -38,7 +28,7 @@ Deno.test("description requires at least 1 move direction", () => {
 Deno.test("description only supports up to 63 pegs", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "o".repeat(64), [
+      new peg.Description("o".repeat(64), [
         peg.MoveDirections.Horizontal,
       ]);
     },
@@ -50,7 +40,7 @@ Deno.test("description only supports up to 63 pegs", () => {
 Deno.test("description all layout lines have to have the same length", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "oo\nooo", [
+      new peg.Description("oo\nooo", [
         peg.MoveDirections.Horizontal,
       ]);
     },
@@ -62,7 +52,7 @@ Deno.test("description all layout lines have to have the same length", () => {
 Deno.test("description no moves possible", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "ooo", [
+      new peg.Description("ooo", [
         peg.MoveDirections.Vertical,
       ]);
     },
@@ -74,7 +64,7 @@ Deno.test("description no moves possible", () => {
 Deno.test("description invalid layout is detected", () => {
   assertThrows(
     () => {
-      new peg.Description("test", " .ooo", [
+      new peg.Description(" .ooo", [
         peg.MoveDirections.Horizontal,
       ]);
     },
@@ -84,23 +74,23 @@ Deno.test("description invalid layout is detected", () => {
 });
 
 Deno.test("description layout is valid", () => {
-  new peg.Description("test", ".ooo", [peg.MoveDirections.Horizontal]);
+  new peg.Description(".ooo", [peg.MoveDirections.Horizontal]);
 });
 
 Deno.test("description layout is valid", () => {
-  new peg.Description("test", "ooo", [peg.MoveDirections.Horizontal]);
+  new peg.Description("ooo", [peg.MoveDirections.Horizontal]);
 });
 
 Deno.test("description peg count is correct", () => {
   assertEquals(
-    new peg.Description("test", "ooooo", [peg.MoveDirections.Horizontal]).pegs,
+    new peg.Description("ooooo", [peg.MoveDirections.Horizontal]).pegs,
     5,
   );
 });
 
 Deno.test("description to_string is ok 1", () => {
   assertEquals(
-    new peg.Description("test", "ooooo", [peg.MoveDirections.Horizontal])
+    new peg.Description("ooooo", [peg.MoveDirections.Horizontal])
       .to_string(0b10100n),
     "x.x..",
   );
@@ -108,7 +98,7 @@ Deno.test("description to_string is ok 1", () => {
 
 Deno.test("description to_string is ok 2", () => {
   assertEquals(
-    new peg.Description("test", "o".repeat(63), [peg.MoveDirections.Horizontal])
+    new peg.Description("o".repeat(63), [peg.MoveDirections.Horizontal])
       .to_string(0x7fffffff_ffffffffn),
     "x".repeat(63),
   );
@@ -116,7 +106,7 @@ Deno.test("description to_string is ok 2", () => {
 
 Deno.test("description to_string is ok 3", () => {
   assertEquals(
-    new peg.Description("test", ".ooooo.", [peg.MoveDirections.Horizontal])
+    new peg.Description(".ooooo.", [peg.MoveDirections.Horizontal])
       .to_string(0b10100n),
     " x.x.. ",
   );
@@ -124,7 +114,7 @@ Deno.test("description to_string is ok 3", () => {
 
 Deno.test("description to_string is ok 4", () => {
   assertEquals(
-    new peg.Description("test", ".ooooo.\n..ooo..\n...o...", [
+    new peg.Description(".ooooo.\n..ooo..\n...o...", [
       peg.MoveDirections.Horizontal,
       peg.MoveDirections.Vertical,
     ])
@@ -136,7 +126,7 @@ Deno.test("description to_string is ok 4", () => {
 Deno.test("description to_string detects invalid states", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "ooo", [peg.MoveDirections.Horizontal])
+      new peg.Description("ooo", [peg.MoveDirections.Horizontal])
         .to_string(0b1111n);
     },
     Error,
@@ -146,7 +136,7 @@ Deno.test("description to_string detects invalid states", () => {
 
 Deno.test("description from_string returns correct result", () => {
   assertEquals(
-    new peg.Description("test", ".ooooo.", [peg.MoveDirections.Horizontal])
+    new peg.Description(".ooooo.", [peg.MoveDirections.Horizontal])
       .from_string(" x.x.. "),
     0b10100n,
   );
@@ -155,7 +145,7 @@ Deno.test("description from_string returns correct result", () => {
 Deno.test("description from_string detects invalid states 1", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "ooo", [peg.MoveDirections.Horizontal])
+      new peg.Description("ooo", [peg.MoveDirections.Horizontal])
         .from_string("xxxx");
     },
     Error,
@@ -166,7 +156,7 @@ Deno.test("description from_string detects invalid states 1", () => {
 Deno.test("description from_string detects invalid states 2", () => {
   assertThrows(
     () => {
-      new peg.Description("test", "ooo", [peg.MoveDirections.Horizontal])
+      new peg.Description("ooo", [peg.MoveDirections.Horizontal])
         .from_string("xxxxb");
     },
     Error,
@@ -177,7 +167,7 @@ Deno.test("description from_string detects invalid states 2", () => {
 Deno.test("description from_string detects invalid states 3", () => {
   assertThrows(
     () => {
-      new peg.Description("test", ".ooo.", [peg.MoveDirections.Horizontal])
+      new peg.Description(".ooo.", [peg.MoveDirections.Horizontal])
         .from_string("  xxx");
     },
     Error,
@@ -188,7 +178,7 @@ Deno.test("description from_string detects invalid states 3", () => {
 Deno.test("description from_string detects invalid states 4", () => {
   assertThrows(
     () => {
-      new peg.Description("test", ".ooo.", [peg.MoveDirections.Horizontal])
+      new peg.Description(".ooo.", [peg.MoveDirections.Horizontal])
         .from_string(" xxx  ");
     },
     Error,
@@ -197,7 +187,7 @@ Deno.test("description from_string detects invalid states 4", () => {
 });
 
 Deno.test("description to_string and from_string", () => {
-  const desc = new peg.Description("test", "..ooooo.", [
+  const desc = new peg.Description("..ooooo.", [
     peg.MoveDirections.Horizontal,
   ]);
   const v = 0b11010n;
@@ -205,7 +195,7 @@ Deno.test("description to_string and from_string", () => {
 });
 
 Deno.test("description from_string to_string", () => {
-  const desc = new peg.Description("test", "..ooooo.", [
+  const desc = new peg.Description("..ooooo.", [
     peg.MoveDirections.Horizontal,
   ]);
   const v = "  ..x.x ";
@@ -216,7 +206,7 @@ Deno.test("description from_string to_string", () => {
 
 Deno.test("description to_vec", () => {
   assertEquals(
-    new peg.Description("test", ".ooo.", [peg.MoveDirections.Horizontal])
+    new peg.Description(".ooo.", [peg.MoveDirections.Horizontal])
       .to_vec(0b100n),
     [[-1, 1, 0, 0, -1]],
   );
@@ -225,7 +215,7 @@ Deno.test("description to_vec", () => {
 Deno.test("description to_vec handles invalid input", () => {
   assertThrows(
     () => {
-      new peg.Description("test", ".ooo.", [peg.MoveDirections.Horizontal])
+      new peg.Description(".ooo.", [peg.MoveDirections.Horizontal])
         .to_vec(0b1101n);
     },
     Error,
@@ -235,7 +225,7 @@ Deno.test("description to_vec handles invalid input", () => {
 
 Deno.test("description from_vec", () => {
   assertEquals(
-    new peg.Description("test", ".ooo.", [peg.MoveDirections.Horizontal])
+    new peg.Description(".ooo.", [peg.MoveDirections.Horizontal])
       .from_vec([[-1, 1, 0, 0, -1]]),
     0b100n,
   );
@@ -244,7 +234,7 @@ Deno.test("description from_vec", () => {
 Deno.test("description from_vec handles invalid input", () => {
   assertThrows(
     () => {
-      new peg.Description("test", ".ooo.", [peg.MoveDirections.Horizontal])
+      new peg.Description(".ooo.", [peg.MoveDirections.Horizontal])
         .from_vec([[-1, 1, 0, -1, -1]]);
     },
     Error,
@@ -253,7 +243,7 @@ Deno.test("description from_vec handles invalid input", () => {
 });
 
 Deno.test("description to_vec from_vec is as expected", () => {
-  const desc = new peg.Description("test", ".ooo.", [
+  const desc = new peg.Description(".ooo.", [
     peg.MoveDirections.Horizontal,
   ]);
   const value = 0b100n;
@@ -262,7 +252,6 @@ Deno.test("description to_vec from_vec is as expected", () => {
 
 Deno.test("solve_test", async () => {
   const desc = new peg.Description(
-    "English",
     "..ooo..\n..ooo..\nooooooo\nooooooo\nooooooo\n..ooo..\n..ooo..",
     [peg.MoveDirections.Horizontal, peg.MoveDirections.Vertical],
   );
