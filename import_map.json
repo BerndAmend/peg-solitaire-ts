@@ -1,8 +1,8 @@
 {
   "imports": {
-    "binaryen": "https://cdn.jsdelivr.net/npm/binaryen@x.x.x/index.js",
-    "long": "https://cdn.jsdelivr.net/npm/long@x.x.x/index.js",
-    "assemblyscript": "https://cdn.jsdelivr.net/npm/assemblyscript@x.x.x/dist/assemblyscript.js",
-    "assemblyscript/asc": "https://cdn.jsdelivr.net/npm/assemblyscript@x.x.x/dist/asc.js"
+    "binaryen": "https://esm.sh/binaryen@110.0.0",
+    "long": "https://esm.sh/long@5.2.0",
+    "assemblyscript": "https://esm.sh/assemblyscript@0.21.4",
+    "assemblyscript/asc": "https://esm.sh/assemblyscript@0.21.4/asc"
   }
 }
