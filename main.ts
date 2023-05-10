@@ -1,7 +1,7 @@
 import * as peg from "./Description.ts";
 
 console.log("peg-solitaire typescript edition");
-console.log("Copyright (C) 2021-2022 Bernd Amend <pegsolitaire@berndamend.de>");
+console.log("Copyright (C) 2021-2023 Bernd Amend <pegsolitaire@berndamend.de>");
 console.log(
   "This program is free software: you can redistribute it and/or modify",
 );
@@ -62,4 +62,3 @@ const solution = await desc.solve(start, (pegs: number) => {
   lastTime = endTime;
 });
 console.log(`took ${new Date().getTime() - startTime}ms`);
-

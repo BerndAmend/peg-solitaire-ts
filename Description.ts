@@ -1,4 +1,4 @@
-import asc from "assemblyscript/asc";
+import asc from "npm:assemblyscript/asc";
 
 export enum MoveDirections {
   Horizontal,
@@ -58,7 +58,7 @@ export class BoardSet {
   }
 
   /// current fill state in percent
-  used(): number {
+  get used(): number {
     return this.#length === 0 ? 1 : (this.#length / this.data.length);
   }
 
@@ -541,10 +541,13 @@ export class Description {
   }
 
   public async generate_normalize_function(): Promise<(state: State) => State> {
-    // @ts-ignore: I have no idea on how to fix this
     const result = await asc.compileString(this.generate_wasm_code_normalize());
     if (result.error) {
-      throw Error(`Compilation error ${result.stderr.toString()}`);
+      throw new Error(`Compilation error ${result.stderr.toString()}`);
+    }
+
+    if (result.binary === null) {
+      throw new Error("result.binary is empty");
     }
 
     const wasmModule = new WebAssembly.Module(result.binary);
