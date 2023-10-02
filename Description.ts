@@ -135,8 +135,6 @@ export class BoardSet {
 }
 
 export class Description {
-  layout: string;
-  directions: MoveDirections[];
   pegs: number;
 
   /// Describes how (x,y)-positions (map-key) inside the layout correspond
@@ -154,7 +152,7 @@ export class Description {
 
   transformations: Transformation[];
 
-  constructor(layout: string, directions: MoveDirections[]) {
+  constructor(readonly layout: string, readonly directions: MoveDirections[]) {
     if (directions.length === 0) {
       throw new Error("no move directions were provided");
     }
@@ -170,9 +168,6 @@ export class Description {
         );
       }
     }
-
-    this.layout = layout;
-    this.directions = directions;
 
     this.pegs = 0;
     for (const x of layout) {
